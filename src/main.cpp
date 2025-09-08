@@ -247,6 +247,22 @@ const char *getDeviceName()
     return name;
 }
 
+// Global variable for receive LED duration
+static uint32_t receiveLedDuration = 5000; // Default 5 seconds for received messages
+
+// Set LED duration for received messages based on priority
+void setReceiveLedDuration(uint32_t durationMs)
+{
+    receiveLedDuration = durationMs;
+}
+
+// Trigger emergency LED alert (30 second duration)
+void triggerEmergencyLedAlert()
+{
+    receiveLedDuration = 30000; // 30 seconds for critical emergencies
+    ledReceive.set(true);
+}
+
 static int32_t ledBlinker()
 {
     // Still set up the blinking (heartbeat) interval but skip code path below, so LED will blink if
@@ -255,9 +271,33 @@ static int32_t ledBlinker()
         return 1000;
 
     static bool ledOn;
+    static uint32_t transmitLedTimeout = 0;
+    static uint32_t receiveLedTimeout = 0;
+    
     ledOn ^= 1;
-
     ledBlink.set(ledOn);
+
+    // Safety timeout for transmission LED (auto-off after 10 seconds if stuck)
+    if (transmitLedTimeout != 0 && millis() > transmitLedTimeout) {
+        ledTransmit.set(false);
+        transmitLedTimeout = 0;
+    }
+    
+    // Set timeout when transmission LED is turned on
+    if (ledTransmit.get() == GpioVirtPin::On && transmitLedTimeout == 0) {
+        transmitLedTimeout = millis() + 10000; // 10 second timeout
+    }
+
+    // Timeout for receive LED (extended duration for emergency visibility)
+    if (receiveLedTimeout != 0 && millis() > receiveLedTimeout) {
+        ledReceive.set(false);
+        receiveLedTimeout = 0;
+    }
+    
+    // Set timeout when receive LED is turned on
+    if (ledReceive.get() == GpioVirtPin::On && receiveLedTimeout == 0) {
+        receiveLedTimeout = millis() + receiveLedDuration;
+    }
 
     // have a very sparse duty cycle of LED being on, unless charging, then blink 0.5Hz square wave rate to indicate that
     return powerStatus->getIsCharging() ? 1000 : (ledOn ? 1 : 1000);
