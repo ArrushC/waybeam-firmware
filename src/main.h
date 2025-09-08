@@ -77,6 +77,12 @@ extern int TCPPort; // set by Portduino
 // Return a human readable string of the form "Meshtastic_ab13"
 const char *getDeviceName();
 
+// Set LED duration for received messages based on priority
+void setReceiveLedDuration(uint32_t durationMs);
+
+// Trigger emergency LED alert (30 second duration)
+void triggerEmergencyLedAlert();
+
 extern uint32_t timeLastPowered;
 
 extern uint32_t rebootAtMsec;
