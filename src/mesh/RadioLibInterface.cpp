@@ -1,4 +1,5 @@
 #include "RadioLibInterface.h"
+#include "Led.h"
 #include "MeshTypes.h"
 #include "NodeDB.h"
 #include "PowerMon.h"
@@ -179,6 +180,9 @@ ErrorCode RadioLibInterface::send(meshtastic_MeshPacket *p)
         return res;
     }
 
+    // Trigger LED for transmission visualization
+    ledTransmit.set(true);
+    
     // set (random) transmit delay to let others reconfigure their radio,
     // to avoid collisions and implement timing-based flooding
     setTransmitDelay();
@@ -386,6 +390,9 @@ void RadioLibInterface::completeSending()
 
         // We are done sending that packet, release it
         packetPool.release(p);
+        
+        // Turn off transmission LED after successful send
+        ledTransmit.set(false);
     }
 }
 
@@ -476,6 +483,23 @@ void RadioLibInterface::handleReceiveInterrupt()
 
             airTime->logAirtime(RX_LOG, xmitMsec);
 
+            // Set LED duration for received messages
+            // Default to longer duration to ensure emergency responders notice incoming messages
+            uint32_t ledDuration = 8000; // 8 seconds default (good emergency visibility)
+            
+            // Longer payloads might indicate more detailed emergency information
+            if (payloadLen > 50) {
+                ledDuration = 15000; // 15 seconds for detailed messages
+            }
+            // Very long payloads likely contain critical emergency data
+            if (payloadLen > 100) {
+                ledDuration = 25000; // 25 seconds for critical messages
+            }
+            
+            // Set the LED duration and trigger receive LED
+            setReceiveLedDuration(ledDuration);
+            ledReceive.set(true);
+
             deliverToReceiver(mp);
         }
     }
@@ -507,6 +531,8 @@ bool RadioLibInterface::startSend(meshtastic_MeshPacket *txp)
     if (disabled || !config.lora.tx_enabled) {
         LOG_WARN("Drop Tx packet because LoRa Tx disabled");
         packetPool.release(txp);
+        // Turn off transmission LED since packet was dropped
+        ledTransmit.set(false);
         return false;
     } else {
         configHardwareForSend(); // must be after setStandby
