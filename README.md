@@ -1,7 +1,15 @@
+> **Legal & attribution:** This repository is a **fork** of the
+> [Meshtastic firmware](https://github.com/meshtastic/firmware) (GPL-3.0) enhanced
+> for **Waybeam emergency response applications**. We are not affiliated with Meshtastic.
+> See **[NOTICE.md](./NOTICE.md)** for a summary of modifications, license/trademark notes,
+> and reproducible build details for any binaries released from this fork.
+
 <div align="center" markdown="1">
 
 <img src=".github/meshtastic_logo.png" alt="Meshtastic Logo" width="80"/>
-<h1>Meshtastic Firmware</h1>
+<h1>Waybeam Firmware (Meshtastic Compatible)</h1>
+
+**Emergency Response Enhanced**: This firmware fork adds visual LED feedback for radio transmissions and received messages, optimized for emergency responders who need clear indication of mesh network activity.
 
 ![GitHub release downloads](https://img.shields.io/github/downloads/meshtastic/firmware/total)
 [![CI](https://img.shields.io/github/actions/workflow/status/meshtastic/firmware/main_matrix.yml?branch=master&label=actions&logo=github&color=yellow)](https://github.com/meshtastic/firmware/actions/workflows/ci.yml)
