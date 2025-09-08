@@ -3,7 +3,7 @@
 #include "main.h"
 #include "power.h"
 
-GpioVirtPin ledForceOn, ledBlink;
+GpioVirtPin ledForceOn, ledBlink, ledTransmit, ledReceive;
 
 #if defined(LED_PIN)
 // Most boards have a GPIO for LED control
@@ -63,4 +63,9 @@ class MonitoredLedPin : public GpioPin
 static GpioPin &monitoredLedPin = ledFinalPin;
 #endif
 
-static GpioBinaryTransformer ledForcer(&ledForceOn, &ledBlink, &monitoredLedPin, GpioBinaryTransformer::Or);
+// Combine heartbeat blink, transmission, and receive signals
+static GpioVirtPin ledTransmitReceiveCombined;
+static GpioBinaryTransformer ledTransmitReceiveCombiner(&ledTransmit, &ledReceive, &ledTransmitReceiveCombined, GpioBinaryTransformer::Or);
+static GpioVirtPin ledAllCombined;
+static GpioBinaryTransformer ledBlinkCombiner(&ledBlink, &ledTransmitReceiveCombined, &ledAllCombined, GpioBinaryTransformer::Or);
+static GpioBinaryTransformer ledForcer(&ledForceOn, &ledAllCombined, &monitoredLedPin, GpioBinaryTransformer::Or);
